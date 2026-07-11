@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xdformat"
+version = "0.1.0"
+description = "The .xd plain-text crossword format: spec, parser, and converters"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Saul Pwanson", email = "xd@saul.pw" },
+]
+keywords = ["crossword", "puzzles", "xd", "puz", "ipuz"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/century-arcade/xdformat"
+Specification = "https://github.com/century-arcade/xdformat/blob/master/doc/xd-format.md"
+
+[project.optional-dependencies]
+convert = ["puzpy>=0.2.6", "ipuz"]
+
+[project.scripts]
+puz2xd = "xdformat.puz2xd:main"
+ipuz2xd = "xdformat.ipuz2xd:main"
+
+[tool.setuptools.packages.find]
+include = ["xdformat*"]
+
+[tool.ruff]
+exclude = ["xdformat/crossword"]  # vendored package
+
+[tool.ruff.lint]
+select = ["E", "W", "F"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
