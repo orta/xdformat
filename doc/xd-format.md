@@ -1,4 +1,4 @@
-# .xd futureproof crossword format 3.0
+# .xd futureproof crossword format 4.0-draft
 
 .xd is a corpus-oriented format, modeled after the simplicity and intuitiveness of the markdown format.  It supports 99.99% of published crosswords, and is intended to be convenient for bulk analysis of crosswords by both humans and machines, from the present and into the future.
 
@@ -56,8 +56,8 @@ The file is specified in one of two methods:
   lines (3 consecutive newlines (0x0A)).
 
 - Using `## [Section Name]` to declare the lines after as a certain section. 
-  Sections with case-insensitive headers which are not `"metadata"`, `"grid"` or 
-  `"clues"` are ignored.  Order is unimportant.
+  Sections with case-insensitive headers which are not `"metadata"`, `"grid"`, 
+  `"clues"` or `"design"` are ignored.  Order is unimportant.
 
   <details>
     <summary>An example of the previous full example using the explicit headers.</summary>
@@ -110,30 +110,63 @@ Editor, Copyright, and Date are the standard headers in the meta section.  Other
 headers describing the puzzle semantics are given below.  Additional headers are 
 allowed but will be ignored.  Multiple entries with the same key are not allowed.
 
+Header keys are case-insensitive: `Title:`, `title:`, and `TITLE:` are
+equivalent.
+
 ### Grid (Section 2)
 
 Optional leading whitespace and trailing whitespace on each line.  Never any
 whitespace between characters in a grid line.
 
-One line per row.  One UTF-8 character per cell.
+One line per row.  One Unicode codepoint per cell.  Cell contents of more
+than one codepoint -- including multi-codepoint graphemes, such as emoji with
+modifiers -- are represented as rebuses.
 
 Uppercase A-Z refer to that letter in the solution; a '#' is a block.  In a few
 puzzles, '\_' means a space or non-existing block (usually on the edges), and '.' would
-be used for an empty cell (e.g. a partial solution).
-
-Lowercase a-z indicate Special cells. The 'Special' header indicates whether
-those cells are "shaded" or have a "circle".
-
-    Special: shaded
+be used for an empty cell (e.g. a partial solution).  [The choice of block and
+empty-cell characters is under discussion; see [#1](https://github.com/century-arcade/xdformat/issues/1).]
 
 Digits, most symbols, and printable unicode characters (if needed) can be used
 to indicate rebus cells.  The 'Rebus' header provides the translation:
 
     Rebus: 1=ONE 2=TWO 3=THREE
 
-Lowercase letters always indicate Special cells if there is a Special header.
-If a puzzle has cells that are both Special and Rebus, a lowercase letter
-should be used, and set to its value in the Rebus header.
+The same key may be assigned more than one value; such a cell accepts any one
+of its values (a Schrödinger cell):
+
+    Rebus: 1=O 1=A
+
+### Design (optional section)
+
+A `## Design` section describes per-cell visual attributes: circles, shading,
+and bars.  [It replaces the v3 'Special' header, which designated lowercase
+a-z grid cells as "shaded" or "circle"; parsers may still encounter the v3
+form in older files.]
+
+The section starts with one or more style definitions, each assigning
+CSS-like properties to a single lowercase letter, followed by a design grid
+of the same dimensions as the puzzle grid, marking each styled cell with its
+style letter and each unstyled cell with '.':
+
+    O { background: circle }
+    S { background: shaded }
+
+    ...O...
+    ..OSO..
+    ...O...
+
+No delimiter is needed between the definitions and the design grid: a
+definition line always contains whitespace, and a design-grid line never does.
+
+Defined properties:
+
+  * `background: circle` -- a circle in the cell
+  * `background: shaded` -- the cell is shaded; the renderer chooses the color
+  * `bar-top: true` -- a bar on the top edge of the cell (barred grids)
+  * `bar-left: true` -- a bar on the left edge of the cell
+
+[Explicit colors and light/dark variants are under discussion; see [#5](https://github.com/century-arcade/xdformat/issues/5).]
 
 ### Clues (Section 3)
 
@@ -147,15 +180,36 @@ Minimal markup is available.  An example clue line:
 
     A51. {/Italic/}, {*bold*}, {_underscore_}, or {-strike-thru-} ~ MARKUP
 
+Additional markup spans: `{~subscript~}`, `{^superscript^}`, and
+`{=small caps=}`.
+
+Markup spans nest:
+
+    A15. Captain in {/{*Moby-Dick*}/} ~ AHAB
+
 Markup is available only in clue text.  Headers and notes are plain text;
 markup syntax appearing in them is not interpreted.  [The markup represents
 the rendered form, as it appeared in the original medium.]
 
-The clue is separated from the answer by a tilde with spaces on both sides (' ~ ').
+The backslash ('\\') is the escape character: `\{` and `\}` give literal
+braces, and `\\` gives a literal backslash.  A backslash before any other
+character is reserved.  [v3 used a bare backslash as a line separator within
+a clue; the v4 syntax for line breaks is under discussion; see [#3](https://github.com/century-arcade/xdformat/issues/3).]
 
-The full answer should be provided, including rebus expansion.  [This makes clue/answer lines independently useful.]
+The clue is followed by a list of one or more full answers, all separated by
+a tilde with spaces on both sides (' ~ ').  Each answer is given with any
+rebuses expanded; rebus keys never appear in answers.  [This makes
+clue/answer lines independently useful.]  Most clues have exactly one answer.
+A clue whose slot has multiple valid fills (a Schrödinger slot) lists each of
+them:
 
-The backslash ('\\') is used as a line separator in the rare case of a multi-line clue.
+    Rebus: 1=O 1=A
+
+
+    C1NE
+
+
+    A1. Sugar ___ ~ CONE ~ CANE
 
 If you need to attach metadata to a clue, on a new line after the clue replace the ". "
 with a " ^" - the key for the metadata is determined as being inbetween the hat and 
@@ -164,11 +218,30 @@ colon:
     A1. Gardener's concerns with A2 and D4. ~ BULB
     A1 ^Refs: A2 D4
 
+Editorial comments are attached the same way (e.g. `A1 ^Comment: ...`); .xd
+has no other comment syntax.
+
 ### Notes (Section 4)
 
 The free-format final section can contain any amount of notes.
 
 ## CHANGELOG
+
+### 4.0-draft
+
+Decisions from the 2026-07-10 spec discussion with Puzzmo and Ingrid; details
+still open are tracked in [issues](https://github.com/century-arcade/xdformat/issues).
+
+- A grid cell holds exactly one Unicode codepoint; larger graphemes are rebuses.
+- Header keys are case-insensitive.
+- A rebus key may be assigned multiple values, declaring a Schrödinger cell.
+- The `## Design` section (adopted from Puzzmo's extension, without its
+  `<style>` wrapper) replaces the 'Special' header and lowercase special cells.
+- A clue line holds a ' ~ '-separated list of answers, usually of size one;
+  a Schrödinger slot lists all valid fills.  Answers always spell out rebus
+  expansions.
+- Markup adds subscript, superscript, and small caps, and formally nests.
+- Backslash is the markup escape character, no longer a line separator.
 
 ### 3.0
 

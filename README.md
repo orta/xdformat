@@ -30,7 +30,7 @@ This repo holds the format specification and the reference tools for parsing .xd
 
 ## The spec
 
-- [doc/xd-format.md](doc/xd-format.md) -- the format specification (v3.0)
+- [doc/xd-format.md](doc/xd-format.md) -- the format specification (v4.0 draft)
 - [doc/rebus-conventions.md](doc/rebus-conventions.md) -- rebus/quantum/Schrödinger conventions observed in the corpus (extensions to the spec, not yet formalized)
 - [doc/character-encoding.md](doc/character-encoding.md) -- character-encoding oddities inherited from source formats, and how the converters clean them up
 

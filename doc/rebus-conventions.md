@@ -5,6 +5,12 @@
 
 ## Status
 
+> **Update 2026-07-10:** the v4.0 draft of the spec adopts the direction
+> recommended in [§5](#5-inline-answer-forms-and-why-they-should-probably-go-away):
+> repeated rebus keys (`Rebus: 1=O 1=A`) declare Schrödinger cells, and a clue
+> line lists all valid answers, ' ~ '-separated, with rebuses always expanded.
+> The rest of this document remains a catalogue of v3-era corpus conventions.
+
 The current spec ([doc/xd-format.md](xd-format.md), v3.0) defines a `Rebus:` header for cells that hold a multi-character or non-standard string:
 
 > Digits, most symbols, and printable unicode characters (if needed) can be used to indicate rebus cells. The 'Rebus' header provides the translation:
