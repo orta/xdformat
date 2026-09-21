@@ -55,64 +55,23 @@ This is the oldest rebus crossword from the New York Times (found by `grep -r Re
 The .xd format is a simple UTF-8 text file, and can often be 7-bit ASCII clean.
 
 The file is specified using `## [Section Name]` to declare the lines after as a certain section.
-Sections with case-insensitive headers which are not `"metadata"`, `"grid"`,  `"clues"` or
+Sections with case-insensitive headings which are not `"metadata"`, `"grid"`,  `"clues"` or
 `"design"` are ignored. Order is unimportant.
-
-  <details>
-    <summary>An example of the previous full example using the explicit headers.</summary>
-
-      ## Metadata
-
-      Title: New York Times, Saturday, January 1, 1955
-      Author: Anthony Morse
-      Editor: Margaret Farrar
-      Rebus: 1=HEART 2=DIAMOND 3=SPADE 4=CLUB
-      Date: 1955-01-01
-
-      ## Grid
-
-      1ACHE#ADAM#2LIL
-      BLUER#GULL#MATA
-      EATIN#APEX#ICER
-      ATAR#TILE#SNEAK
-      TEN#MANI#ITE###
-      ##DRUB#CANASTAS
-      FADED#BAGGY#OIL
-      ONES#KATES#TUNA
-      ETA#JOKER#JORUM
-      SILLABUB#SOON##
-      ###ACE#RUIN#ARK
-      3WORK#JINX#4MAN
-      BIRD#WADS#SCENE
-      ISLE#EDGE#PANEL
-      DEER#BEET#ARTEL
-
-      ## Clues
-
-      A1. Sadness. ~ HEARTACHE
-      A6. Progenitor. ~ ADAM
-      A10. Mae West stand-by. ~ DIAMONDLIL
-      [...]
-
-      D1. Vital throb. ~ HEARTBEAT
-      D2. Having wings. ~ ALATE
-      D3. Start the card game. ~ CUTANDDEAL
-      [...]
-
-  </details>
 
 ### Metadata
 
-The first section is a set of key:value pairs, one per line.  Title, Author,
-Editor, Copyright, and Date are the standard headers in the meta section.  Other
-headers describing the puzzle semantics are given below.  Additional headers are
-allowed but will be ignored.  Multiple entries with the same key are not allowed.
+The metadata section is a set of metadata fields, one per line, each a
+`Key: value` pair.  Title, Author, Editor, Copyright, and Date are the standard
+metadata fields.  Other fields describing the puzzle semantics are given
+below.  Additional fields are allowed but will be ignored.  Multiple fields
+with the same key are not allowed.
 
-Header keys are case-insensitive: `Title:`, `title:`, and `TITLE:` are
+Field keys are case-insensitive: `Title:`, `title:`, and `TITLE:` are
 equivalent.
 
-Header values may carry inline markup for italics, links, images and more; the
-syntax is given in [xdown Formatting](#xdown-formatting) below.
+The value of a metadata field may carry inline markup for italics, links,
+images and more; the syntax is given in [xdown Formatting](#xdown-formatting)
+below.
 
 ### Grid
 
@@ -131,7 +90,7 @@ For the grid:
 * Any other character is assumed to be a rebus lookup
 
 Digits, most symbols, and printable unicode characters (if needed) can be used
-to indicate rebus cells.  The 'Rebus' header provides the translation:
+to indicate rebus cells.  The 'Rebus' field provides the translation:
 
     Rebus: 1=ONE 2=TWO 3=THREE
 
@@ -142,9 +101,14 @@ of its values (a Schrödinger cell):
 
 ### Clues
 
-A leading uppercase letter indicates the group the clue is in. 'A' or 'D'
-indicate Across or Down; the full heading for other letters would be specified
-in the 'Cluegroup' header.  For uniclues, the cluegroup letter is omitted.
+A leading 'A' or 'D' indicates whether the clue is Across or Down.
+
+For [uniclue](https://www.xwordinfo.com/Uniclue) puzzles, where each number
+carries a single clue covering both the Across and the Down entry starting at
+that square, the letter is omitted:
+
+    1. Reposition an icon, maybe ~ DRAGANDDROP
+    2. Crowd's sound ~ ROAR
 
 The clues should be sorted, with a single newline separating clue groups (Across and Down).
 
@@ -162,9 +126,9 @@ The reference runs to the first '.' on the line, and the clue body from
 there to the first ' ~ '.  After each ' ~ ' the answer is the first word;
 anything else in that segment is ignored:
 
-    A6. Book look-up. ~ INDEX (5 letters)
+    A6. Book look-up ~ INDEX (5 letters)
 
-is the clue 'Book look-up.' with the single answer ADAM.  Trailing text has
+is the clue 'Book look-up' with the single answer INDEX.  Trailing text has
 no defined meaning in .xd and should be ignored.
 
 A clue body may carry inline markup for italics, links, images and more; the
@@ -200,7 +164,7 @@ The xd spec does not reserve any keys.
 ### Design (optional section)
 
 A `## Design` section describes per-cell visual attributes: circles, shading,
-bars, and images.  [It replaces the v3 'Special' header, which designated
+bars, and images.  [It replaces the v3 'Special' field, which designated
 lowercase a-z grid cells as "shaded" or "circle"; parsers may still encounter
 the v3 form in older files.]
 
@@ -216,8 +180,9 @@ style character and each unstyled cell with '.':
     ..OSO..
     ...O...
 
-No delimiter is needed between the definitions and the design grid: a
-definition line always contains whitespace, and a design-grid line never does.
+No delimiter is needed between the definitions and the design grid: the
+design grid starts at the first non-blank line after the last definition's
+closing '}'.
 
 Style characters are case-sensitive: a design may use both 'A'-'Z' and
 'a'-'z'.  [An illustrated puzzle can need more than 26 distinct styles.]
@@ -269,7 +234,16 @@ The CSS-like parser should be able to handle:
 
 * Whitespace around a selector, key or value being trimmed -- but whitespace
   *within* a value is kept, which is what separates the two counts in
-  `background-size: 2 2`
+  `background-size: 2 2`.  Newlines count as whitespace, so a definition may
+  span several lines:
+
+    ```css
+    A {
+      background: circle;
+      bar-top: true;
+    }
+    ```
+
 * Re-opening a character:
 
     ```css
@@ -277,8 +251,9 @@ The CSS-like parser should be able to handle:
     A { bar-top: true }
     ```
 
-* Opening many characters at once with a comma: `A,B { background: circle }
-* Separating many properties via semi colons: `A { background: circle; bar-top: true }
+* Opening many characters at once with a comma: `A,B { background: circle }`
+* Separating many properties via semi colons: `A { background: circle; bar-top: true }`
+* An optional trailing semi colon after the last property: `A { background: circle; }`
 * Quoted values inside a rule body, within which none of `}`, `:`, `;` or
   `,` delimits
 * Rejecting a comma inside a rule body, where it is never a separator:
@@ -288,16 +263,23 @@ The CSS-like parser should be able to handle:
 
 ### xdown Formatting
 
-Clue bodies may contain inline markup, known as xdown.  A markup span is an
-opening '{', a type character, the content, the same type character again,
-and a closing '}'.
+Clue bodies and metadata fields may contain inline markup, known as xdown.
+A markup span is an opening '{', a type character, the content, the same type
+character again, and a closing '}'.
 
-Markup is available only in clue bodies.  Headers, answers, and notes are
-plain text; markup syntax appearing in them is not interpreted.  [The markup
-represents the rendered form, as it appeared in the original medium.]
+Markup is available only in clue bodies and the values of metadata fields.
+Metadata field keys, answers, and the grid are plain text; markup syntax
+appearing in them is not interpreted.  [The markup represents the rendered
+form, as it appeared in the original medium.]
 
-There are eleven type characters.  A '{' followed by any other character is
-literal text, so most clue bodies need no escaping.
+Every ASCII punctuation character is reserved as a type character:
+
+    ! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~
+
+Only some of them are defined below; the rest are held for future span types,
+so that adding one never changes the meaning of an existing file.  A '{'
+followed by any other character (a letter, digit, space, and so on) is literal
+text, so most clue bodies need no escaping.
 
 Seven of them style their content as text:
 
@@ -351,9 +333,19 @@ All three parts are required.  Unlike a link, a color is separated at every
 You should assume typoes or malformed markup, and it those cases render plaintext.
 
 The backslash ('\\') is the escape character: `\{` and `\}` give literal
-braces, and `\\` gives a literal backslash.  Only a '{' before a type
-character needs escaping.  A backslash before any other character is
-reserved.
+braces, and `\\` gives a literal backslash.  A literal '{' must be escaped
+when it is followed by any reserved type character, including those not yet
+in use; escaping it before any other character is permitted but not required.
+A backslash before any other character is reserved.
+
+`\~` gives a literal tilde.  A bare '~' needs no escaping, but a clue body
+that contains ' ~ ' would otherwise be cut short at it, since that sequence
+separates the clue body from its answers:
+
+    A1. What \~ means in π \~ 3.14 ~ ROUGHLY
+
+is the clue 'What ~ means in π ~ 3.14' with the answer ROUGHLY.  The clue line
+is split at ' ~ ' before the clue body is read for markup.
 
 A newline is represented as `{\}`
 
@@ -364,15 +356,16 @@ A newline is represented as `{\}`
 Decisions from the 2026-07-10 spec discussion with Puzzmo and Ingrid; details
 still open are tracked in [issues](https://github.com/century-arcade/xdformat/issues).
 
-* [BREAKING] Headers need to be set for sections
+* [BREAKING] Section headings are required
 * [BREAKING] Dropping using capitals in the grid to indicate special blocks (use `## Design`)
 * [BREAKING] `.` can now be used as a block
+* [BREAKING] The 'Cluegroup' field is dropped; clues are only Across or Down
 * A grid cell holds exactly one Unicode codepoint; larger graphemes are rebuses.
-* Header keys are case-insensitive.
-* Header values can now be xdown formatted
+* Metadata field keys are case-insensitive.
+* Metadata fields can now be xdown formatted
 * A rebus key may be assigned multiple values, declaring a Schrödinger cell.
 * The `## Design` section (adopted from Puzzmo's extension, without its
-  `<style>` wrapper) replaces the 'Special' header and lowercase special cells.
+  `<style>` wrapper) replaces the 'Special' field and lowercase special cells.
 * It is now possible to represent barred-grid Crosswords
 * It is possible to represent background images in the grid
 * A clue line holds a ' ~ '-separated list of answers, usually of size one;
@@ -380,6 +373,7 @@ still open are tracked in [issues](https://github.com/century-arcade/xdformat/is
   expansions.  An answer is a single word; text following it is ignored.
 * Markup adds subscript, superscript, and small caps, and formally nests.
 * Backslash is the markup escape character, no longer a line separator.
+* `\~` gives a literal tilde, so a clue body can contain ' ~ '.
 * `{\}` is added as a line separator
 
 ### 3.0
@@ -388,4 +382,4 @@ Includes syntax support for arbitrary clue metadata.
 
 ### 2.0
 
-The 2.0 version of the specification adds support for `## [headers]` for sections of xd content. You can read more in [format specification](#format-specification) above.
+The 2.0 version of the specification adds support for `## [Section Name]` headings for sections of xd content. You can read more in [format specification](#format-specification) above.
