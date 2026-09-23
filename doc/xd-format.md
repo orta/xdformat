@@ -395,11 +395,11 @@ An empty literal, `{\\}`, is a line break.
 Decisions from the 2026-07-10 spec discussion with Puzzmo and Ingrid; details
 still open are tracked in [issues](https://github.com/century-arcade/xdformat/issues).
 
-* Section headings are recommended, and required to use a design section; the
-  implicit section order is still valid
 * [BREAKING] Dropping using capitals in the grid to indicate special blocks (use `## Design`)
 * [BREAKING] `.` can now be used as a block
-* [BREAKING] The 'Cluegroup' field is dropped; clues are only Across or Down
+* [BREAKING] The 'Cluegroup' field is dropped
+* Section headings are recommended, and required to use a design section; the
+  implicit section order is still valid
 * A grid cell holds exactly one Unicode codepoint; larger graphemes are rebuses.
 * Metadata field keys are case-insensitive.
 * Metadata fields can now be xdown formatted
