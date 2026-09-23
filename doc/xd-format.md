@@ -138,7 +138,7 @@ that square, the letter is omitted:
     1. Reposition an icon, maybe ~ DRAGANDDROP
     2. Crowd's sound ~ ROAR
 
-The clues should be sorted, with a single newline separating clue groups (Across and Down).
+The clues should be sorted, with a single newline separating clue groups (Across and then Down).
 
 #### Clue Bodies
 
