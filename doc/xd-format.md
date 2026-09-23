@@ -327,55 +327,62 @@ Text spans nest, and a renderer applies every enclosing style:
 
     A15. Captain in {/{*Moby-Dick*}/} ~ AHAB
 
-The remaining three type characters take structured content, with '|'
-separating the parts.
+The link and image types take attributes as well as content: the content,
+then a '|', then a list of `key: value` pairs separated by ';', written the
+same way as a rule body in the [Design](#design-optional-section) section.  A
+value containing ';' must be quoted, as a data URI does:
 
-A link is `{@` text `|` url `@}`:
+    src: 'data:image/png;base64,iVBORw0KGgo='
 
-    A16. See {@the notes|https://example.com@} ~ AHAB
+The attributes start at the first '|' outside of any nested span, so the
+content may itself contain markup.  A renderer ignores an attribute it does
+not know, so a later version can add one without breaking a file.
 
-The parts are separated at the first '|' outside of any nested span, so the
-text may itself contain markup:
+A link is its text, with the target in `href`:
 
-    A16. See {@{*the notes*}|https://example.com@} ~ AHAB
+    A16. See {@the notes | href: https://example.com@} ~ AHAB
+    A16. See {@{*the notes*} | href: https://example.com@} ~ AHAB
 
-An image is `{!` `[` url `|` alt `|` width `|` height `]` `!}`.  The square
-brackets are part of the syntax, only the url is required, and the url and
-alt are literal text:
+An image is its alt text, with the image in `src`.  `width` and `height` are
+optional:
 
-    A17. Pictured: {![https://example.com/whale.png|A sperm whale]!} ~ AHAB
+    A17. Pictured: {!A sperm whale | src: https://example.com/whale.png!} ~ AHAB
 
 Doubling the opening '!' makes it a block image, rendered on its own line
 rather than inline.  The closing delimiter is unchanged:
 
-    A17. Pictured: {!![https://example.com/whale.png|A sperm whale]!} ~ AHAB
+    A17. Pictured: {!!A sperm whale | src: https://example.com/whale.png!} ~ AHAB
 
-<!-- A color is `{#` text `|` light `|` dark `#}`, giving the color to render the
-text in under a light theme and under a dark theme:
+<!-- A color is its text, with `light` and `dark` giving the color to render it
+in under a light theme and under a dark theme:
 
-    A18. The {#red|#c00000|#ff6666#} planet ~ MARS
+    A18. The {#red | light: #c00000; dark: #ff6666#} planet ~ MARS
 
-All three parts are required.  Unlike a link, a color is separated at every
-'|', so its text cannot contain one. -->
+Both are required. -->
+
+A literal sequence is `{\` content `\}`.  Its content is passed through
+untouched: no markup inside it is interpreted, and it takes no attributes.
+
+A clue body that needs ' ~ ' writes the tilde this way, leaving the spaces
+outside the literal, so that the clue line can still be split on ' ~ ' before
+any markup is read:
+
+    A1. What {\~\} means in π {\~\} 3.14 ~ ROUGHLY
+
+is the clue 'What ~ means in π ~ 3.14' with the answer ROUGHLY.  A literal is
+also how to write a '{' followed by a type character:
+
+    A2. Empty set {\{}\} ~ NULL
+
+[A literal sequence cannot contain '\}'.]
+
+The backslash has no meaning of its own: outside a literal sequence it is
+ordinary text.  Nothing else in a clue body needs escaping, since a bare '~'
+is fine, and a '{' is literal unless a type character follows it.
+
+An empty literal, `{\\}`, is a line break.
 
 You should assume typoes or malformed markup, and it those cases render plaintext.
-
-The backslash ('\\') is the escape character: `\{` and `\}` give literal
-braces, and `\\` gives a literal backslash.  A literal '{' must be escaped
-when it is followed by any reserved type character, including those not yet
-in use; escaping it before any other character is permitted but not required.
-A backslash before any other character is reserved.
-
-`\~` gives a literal tilde.  A bare '~' needs no escaping, but a clue body
-that contains ' ~ ' would otherwise be cut short at it, since that sequence
-separates the clue body from its answers:
-
-    A1. What \~ means in π \~ 3.14 ~ ROUGHLY
-
-is the clue 'What ~ means in π ~ 3.14' with the answer ROUGHLY.  The clue line
-is split at ' ~ ' before the clue body is read for markup.
-
-A newline is represented as `{\}`
 
 ## CHANGELOG
 
@@ -401,9 +408,11 @@ still open are tracked in [issues](https://github.com/century-arcade/xdformat/is
   a Schrödinger slot lists all valid fills.  Answers always spell out rebus
   expansions.  An answer is a single word; text following it is ignored.
 * Markup adds subscript, superscript, and small caps, and formally nests.
-* Backslash is the markup escape character, no longer a line separator.
-* `\~` gives a literal tilde, so a clue body can contain ' ~ '.
-* `{\}` is added as a line separator
+* Links and images take named attributes (`href`, `src`) rather than a
+  positional list of parts.
+* A `{\literal\}` span passes its content through untouched; it replaces
+  backslash escapes, and is how a clue body writes ' ~ '.
+* `{\\}`, an empty literal, is a line break.
 
 ### 3.0
 
