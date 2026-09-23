@@ -388,8 +388,6 @@ is fine, and a '{' is literal unless a type character follows it.
 
 An empty literal, `{\\}`, is a line break.
 
-You should assume typoes or malformed markup, and it those cases render plaintext.
-
 ## CHANGELOG
 
 ### 4.0-draft
