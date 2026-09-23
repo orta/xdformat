@@ -327,10 +327,15 @@ Text spans nest, and a renderer applies every enclosing style:
 
     A15. Captain in {/{*Moby-Dick*}/} ~ AHAB
 
-The link and image types take attributes as well as content: the content,
-then a '|', then a list of `key: value` pairs separated by ';', written the
-same way as a rule body in the [Design](#design-optional-section) section.  A
-value containing ';' must be quoted, as a data URI does:
+Two of them point at something outside the clue:
+
+* `{@link@}` - text with somewhere to go
+* `{!image!}` - an image with its alt text
+
+These two take attributes as well as content: the content, then a '|', then a
+list of `key: value` pairs separated by ';', written the same way as a rule
+body in the [Design](#design-optional-section) section.  A value containing
+';' must be quoted, as a data URI does:
 
     src: 'data:image/png;base64,iVBORw0KGgo='
 
@@ -360,8 +365,11 @@ in under a light theme and under a dark theme:
 
 Both are required. -->
 
-A literal sequence is `{\` content `\}`.  Its content is passed through
-untouched: no markup inside it is interpreted, and it takes no attributes.
+One of them turns markup off:
+
+* `{\literal\}` -- content passed through untouched
+
+Nothing inside a literal is interpreted, and it takes no attributes.
 
 A clue body that needs ' ~ ' writes the tilde this way, leaving the spaces
 outside the literal, so that the clue line can still be split on ' ~ ' before
