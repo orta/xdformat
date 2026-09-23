@@ -348,10 +348,10 @@ optional:
 
     A17. Pictured: {!A sperm whale | src: https://example.com/whale.png!} ~ AHAB
 
-Doubling the opening '!' makes it a block image, rendered on its own line
-rather than inline.  The closing delimiter is unchanged:
+`display` says how the image sits in the clue: `inline`, the default, puts it
+in the run of text, and `block` renders it on its own line:
 
-    A17. Pictured: {!!A sperm whale | src: https://example.com/whale.png!} ~ AHAB
+    A17. Pictured: {!A sperm whale | src: https://example.com/whale.png; display: block!} ~ AHAB
 
 <!-- A color is its text, with `light` and `dark` giving the color to render it
 in under a light theme and under a dark theme:
@@ -408,8 +408,8 @@ still open are tracked in [issues](https://github.com/century-arcade/xdformat/is
   a Schrödinger slot lists all valid fills.  Answers always spell out rebus
   expansions.  An answer is a single word; text following it is ignored.
 * Markup adds subscript, superscript, and small caps, and formally nests.
-* Links and images take named attributes (`href`, `src`) rather than a
-  positional list of parts.
+* Links and images take named attributes (`href`, `src`, `display`) rather
+  than a positional list of parts.
 * A `{\literal\}` span passes its content through untouched; it replaces
   backslash escapes, and is how a clue body writes ' ~ '.
 * `{\\}`, an empty literal, is a line break.
