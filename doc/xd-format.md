@@ -54,9 +54,37 @@ This is the oldest rebus crossword from the New York Times (found by `grep -r Re
 
 The .xd format is a simple UTF-8 text file, and can often be 7-bit ASCII clean.
 
-The file is specified using `## [Section Name]` to declare the lines after as a certain section.
-Sections with case-insensitive headings which are not `"metadata"`, `"grid"`,  `"clues"` or
-`"design"` are ignored. Order is unimportant.
+A file is divided into sections.  A section should start with a
+`## [Section Name]` heading, which declares the lines after it as that section.
+Headings are case-insensitive, and a section whose heading is not `"metadata"`,
+`"grid"`, `"clues"` or `"design"` is ignored.  Order is unimportant.
+
+### Implicit sections
+
+Headings are not required.  In a file with no headings at all, sections are
+delineated by two or more blank lines (3 consecutive newlines (0x0A)) and are
+read in a fixed order: metadata, grid, clues, and then notes for anything
+following.  The full example above can be written this way:
+
+    Title: New York Times, Saturday, January 1, 1955
+    Author: Anthony Morse
+    Editor: Margaret Farrar
+    Rebus: 1=HEART 2=DIAMOND 3=SPADE 4=CLUB
+    Date: 1955-01-01
+
+
+    1ACHE#ADAM#2LIL
+    BLUER#GULL#MATA
+    [...]
+
+
+    A1. Sadness. ~ HEARTACHE
+    A6. Progenitor. ~ ADAM
+    [...]
+
+A design section has no place in that order, so a file using one needs
+headings.  [Nearly every .xd file written so far is headingless, so this form
+stays supported; new files should use headings.]
 
 ### Metadata
 
@@ -356,7 +384,8 @@ A newline is represented as `{\}`
 Decisions from the 2026-07-10 spec discussion with Puzzmo and Ingrid; details
 still open are tracked in [issues](https://github.com/century-arcade/xdformat/issues).
 
-* [BREAKING] Section headings are required
+* Section headings are recommended, and required to use a design section; the
+  implicit section order is still valid
 * [BREAKING] Dropping using capitals in the grid to indicate special blocks (use `## Design`)
 * [BREAKING] `.` can now be used as a block
 * [BREAKING] The 'Cluegroup' field is dropped; clues are only Across or Down
