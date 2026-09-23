@@ -374,8 +374,6 @@ also how to write a '{' followed by a type character:
 
     A2. Empty set {\{}\} ~ NULL
 
-[A literal sequence cannot contain '\}'.]
-
 The backslash has no meaning of its own: outside a literal sequence it is
 ordinary text.  Nothing else in a clue body needs escaping, since a bare '~'
 is fine, and a '{' is literal unless a type character follows it.
