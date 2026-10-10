@@ -115,10 +115,13 @@ For the grid:
 * Uppercase A-Z refer to that letter in the solution
 * Either '#' or '.' is a block
 * '\_' means a spacer or non-existing block (usually on the edges)
+* '?' is an unfilled cell: a cell that takes a letter, but whose solution is
+  not known (an unsolved puzzle, or a grid still being constructed)
 * Any other character is assumed to be a rebus lookup
 
-Digits, most symbols, and printable unicode characters (if needed) can be used
-to indicate rebus cells.  The 'Rebus' field provides the translation:
+Digits, most symbols other than '#', '.', '\_' and '?', and printable unicode
+characters (if needed) can be used to indicate rebus cells.  The 'Rebus'
+field provides the translation:
 
     Rebus: 1=ONE 2=TWO 3=THREE
 
@@ -403,6 +406,8 @@ still open are tracked in [issues](https://github.com/century-arcade/xdformat/is
 
 * [BREAKING] Dropping using capitals in the grid to indicate special blocks (use `## Design`)
 * [BREAKING] `.` can now be used as a block
+* [BREAKING] `?` is reserved in the grid for an unfilled cell, and can no
+  longer be a rebus key
 * [BREAKING] The 'Cluegroup' field is dropped
 * Section headings are recommended, and required to use a design section; the
   implicit section order is still valid
