@@ -152,7 +152,9 @@ The format is:
 
 The reference runs to the first '.' on the line, and the clue body from
 there to the first ' ~ '.  After each ' ~ ' the answer is the first word;
-anything else in that segment is ignored:
+this includes non-ASCII characters and ends at the first whitespace.
+
+Anything else in that segment is ignored:
 
     A6. Book look-up ~ INDEX (5 letters)
 
