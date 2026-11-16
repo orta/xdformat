@@ -1,5 +1,7 @@
 # xdformat
 
+[![tests](https://img.shields.io/github/actions/workflow/status/century-arcade/xdformat/test.yml?branch=master&label=tests)](https://github.com/century-arcade/xdformat/actions/workflows/test.yml) [![pypi](https://img.shields.io/pypi/v/xdformat?label=pypi)](https://pypi.org/project/xdformat/)
+
 .xd is a plain-text format for crossword puzzles, modeled after the simplicity of markdown.  A complete puzzle -- metadata, grid, clues, answers, notes -- is one small UTF-8 file that can be read, edited, diffed, and grepped like any other text file:
 
     Title: New York Times, Saturday, January 1, 1955
