@@ -117,8 +117,7 @@ For the grid:
 * '\_' means a spacer or non-existing block (usually on the edges)
 * '?' is an unfilled cell: a cell that takes a letter, but whose solution is
   not known, as in a grid still being constructed, or a puzzle whose solution
-  is missing or only partly recovered.  [The grid is always the solution,
-  never a solver's progress.]
+  is missing or only partly recovered
 * Any other character is assumed to be a rebus lookup
 
 Digits, most symbols other than '#', '.', '\_' and '?', and printable unicode
