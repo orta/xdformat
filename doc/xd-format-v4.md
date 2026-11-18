@@ -116,7 +116,7 @@ For the grid:
 * Either '#' or '.' is a block
 * '\_' means a spacer or non-existing block (usually on the edges)
 * '?' is an unfilled cell: a cell that takes a letter, but whose solution is
-  not known (an unsolved puzzle, or a grid still being constructed)
+  not known (as in a grid still being constructed)
 * Any other character is assumed to be a rebus lookup
 
 Digits, most symbols other than '#', '.', '\_' and '?', and printable unicode
