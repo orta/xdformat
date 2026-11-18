@@ -130,21 +130,32 @@ field provides the translation:
 
 The field's grammar is:
 
-    field  := group (ws group)*
-    group  := rule ("," rule)*
-    rule   := key "=" option ("|" option)*
-    option := (char | "\|" | "\," | "\\")*
+    field   := rule (ws rule)*
+    rule    := key+ "=" option ("|" option)*
+    option  := text                    ; in a rule with one key
+             | segment+ | ""           ; in a rule with several keys
+    segment := char | escape | "(" text ")"
+    text    := (char | escape)*
+    escape  := "\" ("|" | "," | "(" | ")" | "\")
 
 Here `ws` is one or more spaces or tabs, `key` is one grid character, and
-`char` is any character other than whitespace, '|', ',' or '\'.  A parser
-reads the field in the grammar's order.  It splits on whitespace, then on
-unescaped ',', then separates each key from its value, then splits on
-unescaped '|', and resolves escapes last.
+`char` is any character other than whitespace, '|', ',', '(', ')' or '\'.  A
+parser splits the field on whitespace.  It separates each rule's keys from
+its value at the first '=', then splits the value on unescaped '|'.  In a rule
+with several keys it then splits each option into segments.  It resolves
+escapes last.
 
-Every rebus key in the grid is declared, and no key is declared twice.  A key
-cannot be A-Z, '#', '.', '\_', '=', '|', ',' or '\'.  An empty rule, such as
-one left by a trailing ',', is an error.  So is a backslash before anything
-other than '|', ',' or '\'.
+'|' always separates options.  The number of keys decides only whether an
+option is one string or is split among several cells.  `12=` gives a rule the
+two keys 1 and 2; a key is always one character.
+
+Every rebus key in the grid is declared, and no key is declared twice, whether
+in two rules or twice in one.  A key cannot be A-Z, '#', '.', '\_', '=', '|',
+',', '(', ')' or '\'.  An unescaped ',' is an error anywhere in the value, and
+so are unescaped parentheses in a rule with one key.  So is a backslash before
+anything other than '|', ',', '(', ')' or '\'.  [',' separated rules in v3.
+It is reserved so that a v3 field such as `1=OIL,2=WATER` is an error, rather
+than one rule whose value is `OIL,2=WATER`.]
 
 The value is plain text, and xdown markup is not read in it.
 
@@ -168,10 +179,10 @@ cell 3 is H with empty also accepted:
 
     Rebus: 1= 2=|H 3=H|
 
-A backslash escapes '|', ',' or another backslash.  Every other character is
-literal, including '/' and '=':
+A backslash escapes '|', ',', '(', ')' or another backslash.  Every other
+character is literal, including '/' and '=':
 
-    Rebus: 1=/ 2=\| 3=\, 4=\\
+    Rebus: 1=/ 2=\| 3=\, 4=\( 5=\\
 
 #### Schrödinger cells
 
@@ -189,8 +200,9 @@ either way:
     A6. Sugar ____ ~ CONE ~ CANE
     D2. Apple tech ~ IPOD ~ IPAD
 
-Cells that share a key share its options, but each cell chooses among them on
-its own.  In HEIGHTANDWEIGHT, either EIGHT may be written as 8:
+Cells that share the key of a rule with one key share its options, but each
+cell chooses among them on its own.  In HEIGHTANDWEIGHT, either EIGHT may be
+written as 8:
 
     Rebus: 1=EIGHT|8
 
@@ -201,42 +213,48 @@ its own.  In HEIGHTANDWEIGHT, either EIGHT may be written as 8:
 Cells that change together are linked, and must hold the options at the same
 position.  This keeps a slot reading CIGAR or PENIS, and never CEGIR.
 
-Cells are linked only by joining their rules with ',', with no whitespace,
-into a group.  The rules of a group must have the same number of options:
+Cells are linked only by giving their keys to one rule.  Each option then
+holds one segment per key, in the order the keys are written:
 
-    Rebus: 1=C|P,2=I|E,3=G|N,4=A|I,5=R|S
+    Rebus: 12345=CIGAR|PENIS
 
-The first options spell CIGAR and the second spell PENIS.  A group links every
-cell marked with any of its keys.  Those cells don't have to be adjacent, in
-one entry, or in grid order.
+The first option spells CIGAR and the second PENIS.  A rule links every cell
+marked with any of its keys.  Those cells don't have to be adjacent, in one
+entry, or in grid order.
 
-A cell in a group may hold several characters.  In SHORTLINE/CHORTLING, the
-cells read SC and EG down, and S or C and E or G across:
+A segment is one character, or a string in parentheses.  Parentheses are only
+for a cell that holds more or less than one character, so `(S)` is an error.
+In SHORTLINE/CHORTLING, the cells read SC and EG down, and S or C and E or G
+across:
 
-    Rebus: 1=SC|S|C,2=EG|E|G
+    Rebus: 12=(SC)(EG)|SE|CG
 
-A cell in a group may also hold nothing, as in a slot that reads TEN or is
-left empty:
+`()` is a cell that holds nothing.  An empty option leaves every cell of the
+rule empty, so an option made only of `()` segments is an error.  Here is a
+slot that reads TEN or is left empty:
 
-    Rebus: 1=|T,2=|E,3=|N
+    Rebus: 123=|TEN
 
-Groups are independent of one another.  In `THE[N|S]O[R|U]TH[E|W][A|E]ST`,
+Rules are independent of one another.  In `THE[N|S]O[R|U]TH[E|W][A|E]ST`,
 either of NORTH or SOUTH can go with either of EAST or WEST:
 
-    Rebus: 1=N|S,2=R|U 3=E|W,4=A|E
+    Rebus: 12=NR|SU 34=EA|WE
+
+A rule with several keys needs at least two options, since a single option
+links nothing.
 
 #### Checking a solve
 
 The grid is solved when every A-Z cell holds its letter, and every rebus cell
-is solved.  A rebus cell outside a group is solved when it holds one of its
-options.  A group is solved when there is a position p at which every cell
-marked with one of its keys holds option p of its own rule.  An empty cell
-holds the empty string.
+is solved.  A cell whose rule has one key is solved when it holds one of the
+rule's options.  A rule with several keys is solved when there is a position
+p at which every cell marked with one of its keys holds that key's segment of
+option p.  An empty cell holds the empty string.
 
-Two positions may hold the same option.  Here cells 1 and 2 accept LAT, LUG
-and LAG, but not LUT:
+A cell may hold the same segment at two positions.  Here cells 1 and 2 accept
+LAT, LUG and LAG, but not LUT:
 
-    Rebus: 1=A|U|A,2=T|G|G
+    Rebus: 12=AT|UG|AG
 
     L12
 
@@ -270,11 +288,11 @@ cells unlinked, with the source's solution first and its alternates after:
 
 This accepts exactly what the source accepts.  Linking cells says something
 about the puzzle that the source doesn't, so it is left to someone who knows
-the puzzle.  An editor who knows these cells spell STARWARS or STARTREK joins
-the rules.  They also move the two readings to the front, so that reveal shows
-a letter, and line up the other typings position by position:
+the puzzle.  An editor who knows these cells spell STARWARS or STARTREK gives
+both keys to one rule.  They also move the two readings to the front, so that
+reveal shows a letter, and line up the other typings position by position:
 
-    Rebus: 1=W|T|W/T|T/W|WT|TW,2=A|R|A/R|R/A|AR|RA
+    Rebus: 12=WA|TR|(W/T)(A/R)|(T/W)(R/A)|(WT)(AR)|(TW)(RA)
 
 Linking narrows what is accepted.  A typing in one cell must sit at the same
 position as the typings in its partners, so W/T beside AR is now rejected.
@@ -603,12 +621,13 @@ still open are tracked in [issues](https://github.com/century-arcade/xdformat/is
   the solution.  '/' has no meaning in it.  [v3 corpus files that used '/' by
   convention for Schrödinger or directional cells read differently now, and
   need migrating; see [rebus-conventions.md](rebus-conventions.md).]
-* [BREAKING] ',' in the 'Rebus' field joins rules into a linked group instead
-  of separating them.  For rules with one option each, as in the v3 corpus,
-  the meaning is unchanged, but ', ' leaves an empty rule and is now an error.
-* Cells that change together are linked only by ','-joined rules
-  (`1=C|P,2=I|E,3=G|N,4=A|I,5=R|S`).  Cells that share a key choose among its
-  options independently.
+* [BREAKING] Rules in the 'Rebus' field are separated only by whitespace.
+  ',' is reserved, so a v3 field such as `1=OIL,2=WATER` is now an error and
+  needs migrating to `1=OIL 2=WATER`.
+* Cells that change together are linked only by giving their keys to one rule
+  (`12345=CIGAR|PENIS`), with parentheses around a cell that holds more or
+  less than one character (`12=(SC)(EG)|SE|CG`).  Cells that share the key of
+  a rule with one key choose among its options independently.
 * The 'Rebus' field has a formal grammar.
 * An option may be empty, for a cell that is correct when left empty, and a
   clue line ending in ' ~' has an empty answer.
