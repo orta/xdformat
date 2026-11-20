@@ -348,8 +348,8 @@ A slot that reads TEN or is left empty lists both answers:
 
 A line with no ' ~ ' and no ' ~' at its end states no answer.
 
-Where the puzzle printed a separate clue for each fill of a slot, each clue
-gets its own line at the same position:
+Where the puzzle printed more than one clue for a slot, such as one per fill,
+each clue gets its own line at the same position:
 
     D1. Took a chair ~ SAT
     D1. Had dinner ~ EAT
@@ -601,12 +601,17 @@ still open are tracked in [issues](https://github.com/century-arcade/xdformat/is
   `<style>` wrapper) replaces the 'Special' field and lowercase special cells.
 * It is now possible to represent barred-grid Crosswords
 * It is possible to represent background images in the grid
-* A clue line holds a ' ~ '-separated list of answers, usually of size one;
-  a Schrödinger slot lists each fill that answers the clue.  Answers always spell out rebus
-  expansions.  An answer is a single word; text following it is ignored.
+* [BREAKING] A clue line holds a ' ~ '-separated list of answers, usually of
+  size one; a Schrödinger slot lists each fill that answers the clue.  A tool
+  that expects one answer should take the first, or at least not fail on a
+  list.  Answers always spell out rebus expansions.  An answer is a single
+  word; text following it is ignored.
 * Answers are what the clue means, and are never used to check a solve.
-* A slot the puzzle clued once per fill may have several clue lines at one
-  position.
+* [BREAKING] A clue reference is no longer unique.  A slot the puzzle clued
+  more than once has a line per clue at the same position, as in
+  `D1. Took a chair ~ SAT` and `D1. Had dinner ~ EAT`.  A tool that looks
+  clues up by reference should handle more than one, or at least not fail on
+  a repeated reference.
 * Markup adds subscript, superscript, and small caps, and formally nests.
 * Links and images take named attributes (`href`, `src`, `display`) rather
   than a positional list of parts.
