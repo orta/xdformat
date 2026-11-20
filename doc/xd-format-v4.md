@@ -122,73 +122,71 @@ For the grid:
 
 ### Rebus
 
-Digits, most symbols other than '#', '.', '\_' and '?', and printable unicode
-characters (if needed) can be used to indicate rebus cells.  The 'Rebus'
-field provides the translation:
+The 'Rebus' field gives each rebus key the strings its cells accept:
 
     Rebus: 1=ONE 2=TWO 3=THREE
 
 The field's grammar is:
 
     field   := rule (ws rule)*
-    rule    := key+ "=" option ("|" option)*
-    option  := text                    ; in a rule with one key
-             | segment+ | ""           ; in a rule with several keys
+    rule    := key "=" text ("|" text)*
+             | key key+ "=" linked ("|" linked)+
+    linked  := segment*
     segment := char | escape | "(" text ")"
     text    := (char | escape)*
     escape  := "\" ("|" | "," | "(" | ")" | "\")
 
 Here `ws` is one or more spaces or tabs, `key` is one grid character, and
-`char` is any character other than whitespace, '|', ',', '(', ')' or '\'.  A
-parser splits the field on whitespace.  It separates each rule's keys from
-its value at the first '=', then splits the value on unescaped '|'.  In a rule
-with several keys it then splits each option into segments.  It resolves
-escapes last.
+`char` is any codepoint other than a space, a tab, '|', ',', '(', ')' or '\'.
+On top of the grammar:
 
-'|' always separates options.  The number of keys decides only whether an
-option is one string or is split among several cells.  `12=` gives a rule the
-two keys 1 and 2; a key is always one character.
+* Every rebus key in the grid is declared, and no key is declared twice,
+  whether in two rules or twice in one.  A declared key that isn't in the grid
+  is ignored.  A key cannot be '=', '|', ',', '(', ')' or '\', so those can't
+  appear in the grid.
+* An option of a rule with several keys has one segment per key, or is empty.
+* A segment in parentheses doesn't hold exactly one codepoint, so `(S)` is an
+  error.  `()` is an empty cell, and an option made only of `()` segments is
+  written as the empty option instead.
+* No rule lists the same option twice.
 
-Every rebus key in the grid is declared, and no key is declared twice, whether
-in two rules or twice in one.  A key cannot be A-Z, '#', '.', '\_', '=', '|',
-',', '(', ')' or '\'.  An unescaped ',' is an error anywhere in the value, and
-so are unescaped parentheses in a rule with one key.  So is a backslash before
-anything other than '|', ',', '(', ')' or '\'.  [',' separated rules in v3.
-It is reserved so that a v3 field such as `1=OIL,2=WATER` is an error, rather
-than one rule whose value is `OIL,2=WATER`.]
-
-The value is plain text, and xdown markup is not read in it.
+[',' separated rules in v3.  It is reserved so that a v3 field such as
+`1=OIL,2=WATER` is an error, rather than one rule whose value is
+`OIL,2=WATER`.]
 
 #### Options
 
-Each option is a string that is correct in the cell.  The first is the cell's
-solution, which an app shows when the cell is revealed, and the others are
-also accepted:
+The first option is the cell's solution, which an app shows when the cell is
+revealed.  The others are also accepted:
 
     Rebus: 1=HEART 2=EIGHT|8
 
-A cell with several options takes any of them.  The field doesn't record
-whether the options are different answers, as in a Schrödinger cell, or
-different ways of typing one answer, such as EIGHT and 8.  The answers on the
-clue lines record that.
+The field doesn't record why a cell has several options.  They may be
+different answers, as in a Schrödinger cell, a reading per direction, or ways
+of typing one answer, such as EIGHT and 8.  The answers on the clue lines
+record that.
 
-An option may be empty, which means the cell is correct when left empty.  The
-cell is still a white cell, numbered and counted in its entries like any
-other.  Here cell 1 is always empty, cell 2 is empty with H also accepted, and
-cell 3 is H with empty also accepted:
+An empty option means the cell is correct when left empty.  The cell is still
+a white cell, numbered and counted in its entries like any other.  Here cell 1
+is always empty, cell 2 is empty or H, and cell 3 is H or empty:
 
     Rebus: 1= 2=|H 3=H|
 
-A backslash escapes '|', ',', '(', ')' or another backslash.  Every other
-character is literal, including '/' and '=':
+Apart from the escapes, every character is literal, including '/' and '=':
 
     Rebus: 1=/ 2=\| 3=\, 4=\( 5=\\
 
+Cells that share the key of a rule with one key each choose among its options
+on their own.  In HEIGHTANDWEIGHT, either EIGHT may be written as 8:
+
+    Rebus: 1=EIGHT|8
+
+    H1ANDW1
+
 #### Schrödinger cells
 
-A Schrödinger cell is one whose options are different answers.  The solver
-may enter any of them, and every entry through the cell is built to work
-either way:
+A Schrödinger cell's options are different answers, and every entry through
+the cell is built to work either way:
 
     Rebus: 1=O|A
 
@@ -200,38 +198,22 @@ either way:
     A6. Sugar ____ ~ CONE ~ CANE
     D2. Apple tech ~ IPOD ~ IPAD
 
-Cells that share the key of a rule with one key share its options, but each
-cell chooses among them on its own.  In HEIGHTANDWEIGHT, either EIGHT may be
-written as 8:
-
-    Rebus: 1=EIGHT|8
-
-    H1ANDW1
-
 #### Linked cells
 
-Cells that change together are linked, and must hold the options at the same
-position.  This keeps a slot reading CIGAR or PENIS, and never CEGIR.
-
-Cells are linked only by giving their keys to one rule.  Each option then
-holds one segment per key, in the order the keys are written:
+A rule with several keys links every cell marked with any of them, wherever
+they are in the grid.  Each option has one segment per key, in key order, and
+the cells all take their segments from the same option:
 
     Rebus: 12345=CIGAR|PENIS
 
-The first option spells CIGAR and the second PENIS.  A rule links every cell
-marked with any of its keys.  Those cells don't have to be adjacent, in one
-entry, or in grid order.
+This accepts CIGAR or PENIS, and never CEGIR.
 
-A segment is one character, or a string in parentheses.  Parentheses are only
-for a cell that holds more or less than one character, so `(S)` is an error.
 In SHORTLINE/CHORTLING, the cells read SC and EG down, and S or C and E or G
 across:
 
     Rebus: 12=(SC)(EG)|SE|CG
 
-`()` is a cell that holds nothing.  An empty option leaves every cell of the
-rule empty, so an option made only of `()` segments is an error.  Here is a
-slot that reads TEN or is left empty:
+A slot that reads TEN or is left empty:
 
     Rebus: 123=|TEN
 
@@ -240,33 +222,28 @@ either of NORTH or SOUTH can go with either of EAST or WEST:
 
     Rebus: 12=NR|SU 34=EA|WE
 
-A rule with several keys needs at least two options, since a single option
-links nothing.
-
 #### Checking a solve
 
-The grid is solved when every A-Z cell holds its letter, and every rebus cell
-is solved.  A cell whose rule has one key is solved when it holds one of the
-rule's options.  A rule with several keys is solved when there is a position
-p at which every cell marked with one of its keys holds that key's segment of
-option p.  An empty cell holds the empty string.
+The grid is solved when every A-Z cell holds its letter and every rule is
+solved.  A rule with one key is solved when each of its cells holds one of its
+options.  A rule with several keys is solved when there is a position p at
+which every cell marked with one of its keys holds that key's segment of
+option p.  An empty cell holds the empty string.  Strings are compared
+codepoint by codepoint, so case matters.  Answers on clue lines are never
+used.
 
-A cell may hold the same segment at two positions.  Here cells 1 and 2 accept
-LAT, LUG and LAG, but not LUT:
+A cell may hold the same segment at two positions, so cells 1 and 2 here
+accept LAT, LUG and LAG, but not LUT:
 
     Rebus: 12=AT|UG|AG
 
     L12
 
-Only the grid and the 'Rebus' field decide whether a grid is solved.  Answers
-on clue lines are not to be used in the verification.
-
 #### Readings that differ by direction
 
-A cell holds one string, and its across and down entries both read it.  Where
-a puzzle reads a cell one way across and another way down, such as PH across
-and F down, the field lists each string the cell accepts, and the answers
-carry the direction:
+A cell holds one string, which its across and down entries both read.  For a
+cell read PH across and F down, the field lists both, and the answers carry
+the direction:
 
     Rebus: 1=PH|F
 
@@ -279,23 +256,23 @@ carry the direction:
 
 #### Converted puzzles
 
-A source format may list alternates for a cell without saying how they relate.
-They might be different answers, a reading per direction, or the outlet's
-shortcuts for typing a rebus.  A converter that can't tell which leaves the
-cells unlinked, with the source's solution first and its alternates after:
+A source format may list alternates for a cell without saying whether they
+are different answers, a reading per direction, or the outlet's shortcuts for
+typing a rebus.  A converter that can't tell leaves the cells unlinked, with
+the source's solution first, so that the file accepts exactly what the source
+accepts:
 
-    Rebus: 1=W/T|T/W|WT|TW|W|T 2=A/R|R/A|AR|RA|A|R
+    Rebus: 1=W/T|T/W|WT|TW|W|T 2=A/R|R/A|AR|RA|A|R 3=R/E|E/R|RE|ER|R|E 4=S/K|K/S|SK|KS|S|K
 
-This accepts exactly what the source accepts.  Linking cells says something
-about the puzzle that the source doesn't, so it is left to someone who knows
-the puzzle.  An editor who knows these cells spell STARWARS or STARTREK gives
-both keys to one rule.  They also move the two readings to the front, so that
-reveal shows a letter, and line up the other typings position by position:
+Linking says something about the puzzle that the source doesn't, so it is left
+to an editor who knows the puzzle.  An editor who knows these cells spell
+STARWARS or STARTREK gives the four keys to one rule.  They put the two
+readings first, so that reveal shows letters, and line up the other typings
+position by position:
 
-    Rebus: 12=WA|TR|(W/T)(A/R)|(T/W)(R/A)|(WT)(AR)|(TW)(RA)
+    Rebus: 1234=WARS|TREK|(W/T)(A/R)(R/E)(S/K)|(T/W)(R/A)(E/R)(K/S)|(WT)(AR)(RE)(SK)|(TW)(RA)(ER)(KS)
 
-Linking narrows what is accepted.  A typing in one cell must sit at the same
-position as the typings in its partners, so W/T beside AR is now rejected.
+Linking narrows what is accepted, so W/T beside AR is now rejected.
 
 ### Clues
 
@@ -320,45 +297,37 @@ The format is:
     |   clue body
     clue reference
 
-The reference runs to the first '.' on the line, and the clue body from
-there to the first ' ~ ', or to the end of the line if it has none.  (A line
-ending in ' ~' has an empty answer; see below.)  After each ' ~ ' the answer
-is the first word;
-this includes non-ASCII characters and ends at the first whitespace.
-
-Anything else in that segment is ignored:
+The reference runs to the first '.' on the line, and the clue body from there
+to the first ' ~ ', or to the end of the line if it has none.  After each
+' ~ ' the answer is the first word, which includes non-ASCII characters and
+ends at the first whitespace.  The rest of that segment has no defined meaning
+and is ignored:
 
     A6. Book look-up ~ INDEX (5 letters)
 
-is the clue 'Book look-up' with the single answer INDEX.  Trailing text has
-no defined meaning in .xd and should be ignored.
+is the clue 'Book look-up' with the single answer INDEX.
 
 A clue body may carry inline markup for italics, links, images and more; the
 syntax is given in [xdown Formatting](#xdown-formatting) below.
 
-The clue is followed by a list of one or more full answers, all separated by
-a tilde with spaces on both sides (' ~ ').  An answer is what the clue means,
-written out in full with any rebuses expanded; rebus keys never appear in
-answers.  [This makes clue/answer lines independently useful.]  Most clues
-have exactly one answer.
+An answer is what the clue means, written out in full with any rebuses
+expanded; rebus keys never appear in answers.  [This makes clue/answer lines
+independently useful.]  Most clues have exactly one answer.
 
 A clue whose slot has several fills that answer it (a Schrödinger slot) lists
-each of them, and should list first the one the cells' solutions spell.
-Other typings of the same answer, such as 8 for EIGHT, add no answers:
+each of them, with the one the cells' solutions spell first.  Other typings
+of the same answer, such as 8 for EIGHT, add no answers:
 
     Rebus: 1=O|A
-  
 
     C1NE
 
-
     A1. Sugar ___ ~ CONE ~ CANE
 
-Answers never decide whether a grid is solved, and an answer doesn't have to
-be something its slot can spell.  A theme can read a cell twice, as in
-TEENSYWEENSY in a six-cell slot `1EENSY` with `1=TW`, or supply letters that
-appear in no cell, as in SILVERBACK in a slot spelling BACK, with SILVER
-supplied by the grid's border:
+An answer doesn't have to be something its slot can spell.  A theme can read
+a cell twice, as in TEENSYWEENSY in a six-cell slot `1EENSY` with `1=TW`, or
+supply letters that appear in no cell, as in SILVERBACK in a slot spelling
+BACK, with SILVER supplied by the grid's border:
 
     A7. Minuscule, in cutesy lingo ~ TEENSYWEENSY
     A1. Kind of gorilla ~ SILVERBACK
@@ -366,14 +335,14 @@ supplied by the grid's border:
 A tool that compares answers with their slots should report these as
 unverified, not as errors.
 
-An empty answer is written as a ' ~' that ends the line.  The ' ~' is removed,
-the rest of the line is read as above, and the empty answer comes after any
-others.  [A trailing space would be lost to editors that trim whitespace.]
+An empty answer is written as a ' ~' that ends the line, ignoring trailing
+whitespace.  The ' ~' is removed, the rest of the line is read as above, and
+the empty answer is listed last, even when it is the solution.  [A trailing
+space would be lost to editors that trim whitespace.]
 
     A5. What's uttered by a mime ~
 
-A slot that reads TEN or is left empty can list both answers, or leave the
-empty one out:
+A slot that reads TEN or is left empty lists both answers:
 
     A5. Number that pulled a disappearing act ~ TEN ~
 
@@ -618,25 +587,22 @@ still open are tracked in [issues](https://github.com/century-arcade/xdformat/is
   should emit titlecase.
 * Metadata fields other than 'Rebus' can now be xdown formatted
 * [BREAKING] A rebus value is a '|'-separated list of options, the first being
-  the solution.  '/' has no meaning in it.  [v3 corpus files that used '/' by
-  convention for Schrödinger or directional cells read differently now, and
-  need migrating; see [rebus-conventions.md](rebus-conventions.md).]
+  the solution, and an option may be empty.  '/' has no meaning in it.  [v3
+  corpus files that used '/' by convention for Schrödinger or directional
+  cells read differently now, and need migrating; see
+  [rebus-conventions.md](rebus-conventions.md).]
 * [BREAKING] Rules in the 'Rebus' field are separated only by whitespace.
-  ',' is reserved, so a v3 field such as `1=OIL,2=WATER` is now an error and
-  needs migrating to `1=OIL 2=WATER`.
-* Cells that change together are linked only by giving their keys to one rule
-  (`12345=CIGAR|PENIS`), with parentheses around a cell that holds more or
-  less than one character (`12=(SC)(EG)|SE|CG`).  Cells that share the key of
-  a rule with one key choose among its options independently.
-* The 'Rebus' field has a formal grammar.
-* An option may be empty, for a cell that is correct when left empty, and a
-  clue line ending in ' ~' has an empty answer.
+  ',', '(' and ')' are reserved and '\' escapes, so a v3 field such as
+  `1=OIL,2=WATER` is now an error and needs migrating to `1=OIL 2=WATER`.
+* Cells that change together are linked by giving their keys to one rule
+  (`12345=CIGAR|PENIS`).
+* A clue line ending in ' ~' has an empty answer.
 * The `## Design` section (adopted from Puzzmo's extension, without its
   `<style>` wrapper) replaces the 'Special' field and lowercase special cells.
 * It is now possible to represent barred-grid Crosswords
 * It is possible to represent background images in the grid
 * A clue line holds a ' ~ '-separated list of answers, usually of size one;
-  a Schrödinger slot lists all valid fills.  Answers always spell out rebus
+  a Schrödinger slot lists each fill that answers the clue.  Answers always spell out rebus
   expansions.  An answer is a single word; text following it is ignored.
 * Answers are what the clue means, and are never used to check a solve.
 * A slot the puzzle clued once per fill may have several clue lines at one
